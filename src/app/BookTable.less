@@ -1,0 +1,51 @@
+.book-table {
+    position: fixed;
+    top: 0;
+
+    width: 360px;
+    overflow-y: scroll;
+    height: 100vh;
+
+    padding: 24px;
+}
+
+.book-table-item {
+    display: flex;
+}
+
+.book-table-item-icon {
+    cursor: pointer;
+
+    > span {
+        height: 100%;
+        font-size: 12px;
+        margin: 0 8px;
+    }
+
+    &:hover {
+        background-color: #f5f5f5;
+    }
+}
+
+.book-table-item-title {
+    width: 100%;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 3px;
+
+    &:hover {
+        background-color: #f5f5f5;
+    }
+
+    &.currentPath {
+        background-color: #91d5ff;
+    }
+}
+
+.book-table > .book-table-item {
+    margin-left: 28px; // 12 + 8 + 8
+}
+
+.book-table-items-list {
+    margin-left: calc(28px + 1em);
+}
