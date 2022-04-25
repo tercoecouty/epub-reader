@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
 import "./app.less";
@@ -16,14 +16,14 @@ export default function App() {
     const filePath = useSelector(selectFilePath);
     const hash = useSelector(selectHash);
 
-    // useEffect(() => {
-    // setTimeout(async () => {
-    // const res = await fetch("./jane.epub");
-    // const blob = await res.blob();
-    // const _epub = await new Epub().load(blob);
-    // setEpub(_epub);
-    // }, 0);
-    // }, []);
+    useEffect(() => {
+        setTimeout(async () => {
+            const res = await fetch("./jane.epub");
+            const blob = await res.blob();
+            const _epub = await new Epub().load(blob);
+            setEpub(_epub);
+        }, 0);
+    }, []);
 
     const handleInputChange = async (file: File) => {
         if (epub) epub.clearCache();
