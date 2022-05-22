@@ -1,0 +1,80 @@
+.text {
+    padding: 24px;
+    margin-left: 18rem;
+    text-align: justify;
+    margin-top: 64px;
+
+    a {
+        text-decoration: none;
+    }
+
+    img {
+        max-width: 100%;
+    }
+}
+
+#text > .text-html {
+    p {
+        font-family: "Times New Roman", Arial;
+        font-size: 16px;
+        line-height: 2;
+        margin: 0;
+    }
+
+    &.en p {
+        font-family: Georgia, Arial;
+    }
+
+    h1 {
+        font-size: 2rem;
+        margin: 20px 0;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin: 16px 0;
+    }
+
+    h3 {
+        font-size: 1.2rem;
+        margin: 12px 0;
+    }
+
+    h4,
+    h5,
+    h6 {
+        font-size: 1rem;
+        margin: 12px 0;
+    }
+
+    .img-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+.refer-html {
+    display: none;
+}
+
+.refer-text {
+    display: none;
+    position: fixed;
+    font-size: 14px;
+    width: 350px;
+    top: 0;
+    right: 50px;
+    white-space: pre-wrap;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.book-note {
+    cursor: pointer;
+}
+
+.book-note-sup {
+    font-size: 0.8em;
+    vertical-align: super;
+}

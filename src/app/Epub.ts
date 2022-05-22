@@ -1,5 +1,4 @@
 import JSZip from "jszip";
-import { XMLParser } from "fast-xml-parser";
 
 interface IMetaData {
     title: string;
@@ -7,6 +6,7 @@ interface IMetaData {
     description: string;
     publisher: string;
     cover: string;
+    language: string;
 }
 
 export interface IBookTableItem {
@@ -18,38 +18,43 @@ export interface IBookTableItem {
 export default class Epub {
     private pathPrefix: string = "";
     private zip: JSZip = null;
-    private xmlParser: XMLParser = null;
+    private parser = new DOMParser();
     private metaData: IMetaData;
-    private manifest: Map<string, string>; // id -> path
+    private manifest: Map<string, string> = new Map(); // id -> path
     private readingOrder: string[] = []; // list of paths
     private bookTable: IBookTableItem[] = [];
     private textFileCache: Map<string, string> = new Map(); // path -> fileText
     private blobFileUrlCache: Map<string, string> = new Map(); // path -> object url
 
-    constructor() {
-        this.xmlParser = new XMLParser({
-            ignoreAttributes: false,
-            attributeNamePrefix: "@_",
-        });
-    }
+    constructor() {}
 
     async load(data: File | Blob) {
         this.zip = await JSZip.loadAsync(data);
 
         this.pathPrefix = this.zip.file("OEBPS/content.opf") ? "OEBPS/" : "";
 
-        const opf = await this.getParsedFile("content.opf");
+        const opfDOM = this.parser.parseFromString(await this.getTextFile("content.opf"), "text/xml");
 
-        this.metaData = this.parseMetaData(opf["package"]["metadata"]);
+        this.metaData = {
+            title: opfDOM.getElementsByTagName("dc:title")[0]?.textContent || "",
+            author: opfDOM.getElementsByTagName("dc:creator")[0]?.textContent || "",
+            description: opfDOM.getElementsByTagName("dc:description")[0]?.textContent || "",
+            publisher: opfDOM.getElementsByTagName("dc:publisher")[0]?.textContent || "",
+            cover: "",
+            language: opfDOM.getElementsByTagName("dc:language")[0].textContent || "",
+        };
 
-        this.manifest = this.parseManifest(opf["package"]["manifest"]["item"]);
-        if (this.manifest.has("cover")) this.metaData.cover = this.manifest.get("cover");
+        for (const item of opfDOM.querySelectorAll("manifest > item")) {
+            this.manifest.set(item.id, item.getAttribute("href"));
+        }
 
-        this.readingOrder = this.parseSpine(opf["package"]["spine"]["itemref"]);
+        for (const item of opfDOM.querySelectorAll("spine > itemref")) {
+            this.readingOrder.push(item.getAttribute("idref"));
+        }
 
-        const ncx = await this.getParsedFile("toc.ncx");
+        const ncxDOM = this.parser.parseFromString(await this.getTextFile("toc.ncx"), "text/xml");
 
-        this.bookTable = this.parseNavPoint(ncx["ncx"]["navMap"]["navPoint"]);
+        this.bookTable = this.parseNavPoint(ncxDOM.querySelectorAll("navMap > navPoint"));
         this.normalizeBookTable(this.bookTable);
 
         return this;
@@ -113,65 +118,16 @@ export default class Epub {
 
     private parseNavPoint(items) {
         const _bookTable = [];
-        if (!Array.isArray(items)) items = [items];
 
         for (const item of items) {
-            const title = item["navLabel"]["text"];
-            const path = item["content"]["@_src"];
-            const children = item["navPoint"] ? this.parseNavPoint(item["navPoint"]) : null;
+            const title = item.querySelector("navLabel > text").textContent;
+            const path = item.querySelector("content").getAttribute("src") || "";
+            const navPoints = Array.from(item.children as any[]).filter((ele) => ele.tagName === "navPoint");
+            const children = navPoints.length ? this.parseNavPoint(navPoints) : null;
             _bookTable.push({ title, path, children });
         }
 
         return _bookTable;
-    }
-
-    private parseSpine(items) {
-        const _readingOrder = [];
-
-        for (const item of items) {
-            const path = this.manifest.get(item["@_idref"]);
-            _readingOrder.push(path);
-        }
-
-        return _readingOrder;
-    }
-
-    private parseManifest(items) {
-        const _manifest = new Map();
-
-        for (const item of items) {
-            _manifest.set(item["@_id"], item["@_href"]);
-        }
-
-        return _manifest;
-    }
-
-    private parseMetaData(data: any) {
-        const parseMetadataItem = (item: any) => {
-            if (!item) return "";
-
-            if (typeof item === "string") return item;
-            if ("#text" in item) return item["#text"];
-            if (Array.isArray(item)) {
-                return item.map((subItem) => parseMetadataItem(subItem)).join(", ");
-            }
-        };
-
-        const _metaData: IMetaData = {
-            title: parseMetadataItem(data["dc:title"]),
-            author: parseMetadataItem(data["dc:creator"]),
-            description: parseMetadataItem(data["dc:description"]),
-            publisher: parseMetadataItem(data["dc:publisher"]),
-            cover: "",
-        };
-
-        return _metaData;
-    }
-
-    private async getParsedFile(path: string) {
-        const file = await this.getTextFile(path);
-        const parsedFile = this.xmlParser.parse(file);
-        return parsedFile;
     }
 
     async getTextFile(path: string) {

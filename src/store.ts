@@ -6,6 +6,13 @@ const store = configureStore({
     reducer: {
         app: appReducer,
     },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            serializableCheck: {
+                ignoredPaths: ["app.epub"],
+                ignoredActions: ["app/setEpub"],
+            },
+        }),
 });
 
 export default store;

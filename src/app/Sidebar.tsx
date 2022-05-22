@@ -1,28 +1,24 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-
-import "./BookTable.less";
-
-import Icon from "../component/Icon";
+import "./Sidebar.less";
 
 import { IBookTableItem } from "./Epub";
-import { selectFilePath, selectHash, appActions } from "../slice/appSlice";
+import { selectFilePath, selectHash, selectEpub, appActions } from "../slice/appSlice";
 
+import Icon from "../component/Icon";
 import rightSvg from "./svg/right.svg?raw";
 import downSvg from "./svg/down.svg?raw";
 
-interface IBookTableProps {
-    bookTable?: IBookTableItem[];
-}
-
-function BookTable(props: IBookTableProps) {
+export default function Sidebar() {
     const dispatch = useDispatch();
-    const { bookTable } = props;
+    const epub = useSelector(selectEpub);
     const filePath = useSelector(selectFilePath);
     const hash = useSelector(selectHash);
     const [expands, setExpands] = useState({});
 
     useEffect(() => {
+        if (!epub) return;
+
         const _setExpands = (bookTable: IBookTableItem[]) => {
             for (const item of bookTable) {
                 if (item.children) {
@@ -32,10 +28,9 @@ function BookTable(props: IBookTableProps) {
             }
         };
 
-        _setExpands(bookTable);
-
+        _setExpands(epub.getBookTable());
         setExpands({ ...expands });
-    }, [bookTable]);
+    }, [epub]);
 
     const handleClickIcon = (e) => {
         const path = e.target.closest(".book-table-item").dataset.path;
@@ -65,6 +60,7 @@ function BookTable(props: IBookTableProps) {
         }
     };
 
+    // hash改变时无法处理高亮
     const renderBookTable = (bookTable: IBookTableItem[]) => {
         const renderedBookTable = [];
         let keyIndex = 0;
@@ -81,7 +77,7 @@ function BookTable(props: IBookTableProps) {
                             <div className="book-table-item-icon" onClick={handleClickIcon}>
                                 <Icon svg={expands[item.path] ? downSvg : rightSvg}></Icon>
                             </div>
-                            <div className={titleClassName} onClick={handleClickTitle}>
+                            <div className={titleClassName} onClick={handleClickTitle} title={item.title}>
                                 {item.title}
                             </div>
                         </div>
@@ -104,7 +100,5 @@ function BookTable(props: IBookTableProps) {
         return renderedBookTable;
     };
 
-    return <div className="book-table">{renderBookTable(bookTable)}</div>;
+    return <aside className="book-table">{epub ? renderBookTable(epub.getBookTable()) : null}</aside>;
 }
-
-export default BookTable;
