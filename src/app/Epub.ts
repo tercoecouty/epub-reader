@@ -161,7 +161,12 @@ export default class Epub {
         const file = this.zip.file(this.pathPrefix + path);
         if (!file) return "";
 
-        const blob = await file.async("blob");
+        let type = "";
+        if (path.endsWith(".svg")) type = "image/svg+xml";
+        else if (path.endsWith(".png")) type = "image/png";
+        else if (path.endsWith(".jpg") || path.endsWith(".jpeg")) type = "image/jpeg";
+
+        const blob = new Blob([await file.async("blob")], { type });
         const url = URL.createObjectURL(blob);
         this.blobFileUrlCache.set(path, url);
 
