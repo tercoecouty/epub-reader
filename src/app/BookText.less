@@ -1,5 +1,5 @@
 .text {
-    padding: 24px;
+    padding: 24px 20%;
     margin-left: 18rem;
     text-align: justify;
     margin-top: 64px;
@@ -13,38 +13,57 @@
     }
 }
 
+@media (max-width: 1250px) {
+    .text {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 1750px) {
+    .text {
+        padding: 24px 10%;
+    }
+}
+
 #text > .text-html {
     p {
-        font-family: "Times New Roman", Arial;
         font-size: 16px;
         line-height: 2;
         margin: 0;
     }
 
-    &.en p {
+    * {
+        font-family: "Times New Roman", Arial;
+    }
+
+    &.en * {
         font-family: Georgia, Arial;
     }
 
     h1 {
         font-size: 2rem;
-        margin: 20px 0;
+        padding: 20px 0;
+        margin: 0;
     }
 
     h2 {
         font-size: 1.5rem;
-        margin: 16px 0;
+        padding: 16px 0;
+        margin: 0;
     }
 
     h3 {
         font-size: 1.2rem;
-        margin: 12px 0;
+        padding: 12px 0;
+        margin: 0;
     }
 
     h4,
     h5,
     h6 {
         font-size: 1rem;
-        margin: 12px 0;
+        padding: 12px 0;
+        margin: 0;
     }
 
     .img-container {

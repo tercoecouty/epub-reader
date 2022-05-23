@@ -31,9 +31,14 @@ export default class Epub {
     async load(data: File | Blob) {
         this.zip = await JSZip.loadAsync(data);
 
-        this.pathPrefix = this.zip.file("OEBPS/content.opf") ? "OEBPS/" : "";
+        const container = this.parser.parseFromString(await this.getTextFile("META-INF/container.xml"), "text/xml");
+        const splits = container.querySelector("rootfile")?.getAttribute("full-path").split("/");
+        if (splits.length !== 1) {
+            this.pathPrefix = splits[0] + "/";
+        }
 
-        const opfDOM = this.parser.parseFromString(await this.getTextFile("content.opf"), "text/xml");
+        const opfPath = splits.slice(-1)[0];
+        const opfDOM = this.parser.parseFromString(await this.getTextFile(opfPath), "text/xml");
 
         this.metaData = {
             title: opfDOM.getElementsByTagName("dc:title")[0]?.textContent || "",
@@ -41,18 +46,26 @@ export default class Epub {
             description: opfDOM.getElementsByTagName("dc:description")[0]?.textContent || "",
             publisher: opfDOM.getElementsByTagName("dc:publisher")[0]?.textContent || "",
             cover: "",
-            language: opfDOM.getElementsByTagName("dc:language")[0].textContent || "",
+            language: opfDOM.getElementsByTagName("dc:language")[0]?.textContent || "",
         };
+        if (this.metaData.language === "") {
+            if (this.metaData.title.match(/^[\u0020-\u007e]+$/)) {
+                this.metaData.language = "en";
+            }
+        }
 
+        let ncxPath = "toc.ncx";
         for (const item of opfDOM.querySelectorAll("manifest > item")) {
-            this.manifest.set(item.id, item.getAttribute("href"));
+            const href = item.getAttribute("href");
+            this.manifest.set(item.id, href);
+            if (href.endsWith(".ncx")) ncxPath = href;
         }
 
         for (const item of opfDOM.querySelectorAll("spine > itemref")) {
-            this.readingOrder.push(item.getAttribute("idref"));
+            this.readingOrder.push(this.manifest.get(item.getAttribute("idref")));
         }
 
-        const ncxDOM = this.parser.parseFromString(await this.getTextFile("toc.ncx"), "text/xml");
+        const ncxDOM = this.parser.parseFromString(await this.getTextFile(ncxPath), "text/xml");
 
         this.bookTable = this.parseNavPoint(ncxDOM.querySelectorAll("navMap > navPoint"));
         this.normalizeBookTable(this.bookTable);

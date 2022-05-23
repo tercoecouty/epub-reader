@@ -58,17 +58,12 @@ export default function BookText() {
             const href = dom_link.getAttribute("href");
             const linkPath = resolvePath(filePath, href);
             let cssText = await epub.getTextFile(linkPath);
-            const _matches = cssText.matchAll(/url\((.+?)\)/gs);
-            for (const _match of _matches) {
-                const src = _match[1];
-                const srcPath = resolvePath(linkPath, src);
-                const srcUrl = await epub.getBlobFileUrl(srcPath);
-                cssText = cssText.replace(src, srcUrl);
-            }
+            cssText = cssText.replaceAll(/@font-face.?{.+?}/gs, "");
             const dom_style = document.createElement("style");
             dom_style.className = "epub-link-style";
             dom_style.textContent = cssText;
             document.head.append(dom_style);
+            dom_link.remove(); // 有些不规范的epub文件的link会出现在body中
         }
 
         for (const style of oldStyles) style.remove();
@@ -82,6 +77,7 @@ export default function BookText() {
         }
 
         // text
+        // 无法处理希腊字母和数学符号
         for (const dom_p of htmlDOM.querySelectorAll("p")) {
             for (const node of dom_p.childNodes) {
                 if (node.nodeType !== 3) continue;
@@ -270,13 +266,18 @@ export default function BookText() {
     }, [hash]);
 
     const handleTextClick = (e) => {
-        e.preventDefault(); // 可能是一个外部链接
+        e.preventDefault();
         const dom_a = e.target.closest("a");
         if (!dom_a) return;
 
         const href = dom_a.getAttribute("href");
         if (!href) return;
 
+        if (href.startsWith("http")) {
+            // 外部链接
+            window.open(href, "_blank");
+            return;
+        }
         const url = new URL(href, "http:localhost/" + filePath);
         const _filePath = url.pathname.slice(1);
         const _hash = url.hash.slice(1);

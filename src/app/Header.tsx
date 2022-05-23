@@ -1,54 +1,66 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectEpub, appActions } from "../slice/appSlice";
 import "./Header.less";
 import Epub from "./Epub";
+
+import { selectEpub, selectFilePath, appActions } from "../slice/appSlice";
 
 export default function Header() {
     const dispatch = useDispatch();
     const epub = useSelector(selectEpub);
+    const filePath = useSelector(selectFilePath);
 
     const handleFileChange = async (e) => {
         if (epub) epub.clearCache();
 
         const file = e.target.files[0] as File;
         const _epub = await new Epub().load(file);
+        const readingOrder = _epub.getReadingOrder();
         dispatch(appActions.setEpub(_epub));
-        dispatch(appActions.setFilePath(""));
+        dispatch(appActions.setFilePath(readingOrder[1]));
         dispatch(appActions.setHash(""));
-        // (window as any).epub = _epub;
+
         document.getElementById("text-html").replaceChildren();
         document.title = _epub.getMetaData().title;
-        if (_epub.getMetaData().language === "en") {
+        if (_epub.getMetaData().language.includes("en")) {
             document.getElementById("text-html").classList.add("en");
         } else {
             document.getElementById("text-html").classList.remove("en");
         }
     };
 
-    // useEffect(() => {
-    //     setTimeout(async () => {
-    //         const res = await fetch("./jane.epub");
-    //         const blob = await res.blob();
-    //         const _epub = await new Epub().load(blob);
-    //         dispatch(appActions.setEpub(_epub));
-    //         (window as any).epub = _epub;
-    //     }, 0);
-    // }, []);
+    const handleNextPage = () => {
+        const readingOrder = epub.getReadingOrder();
 
-    // useEffect(() => {
-    //     setTimeout(async () => {
-    //         let res = await fetch("./1.html");
-    //         const htmlText = await res.text();
-    //         const parser = new DOMParser();
-    //         const htmlDOM = parser.parseFromString(htmlText, "text/html");
-    //         (window as any).htmlDOM = htmlDOM;
-    //     }, 0);
-    // }, []);
+        if (filePath) {
+            const index = readingOrder.indexOf(filePath);
+            if (index === -1 || index === readingOrder.length - 1) return;
+
+            dispatch(appActions.setFilePath(readingOrder[index + 1]));
+            dispatch(appActions.setHash(""));
+        } else {
+            dispatch(appActions.setFilePath(readingOrder[1]));
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (!filePath) return;
+
+        const readingOrder = epub.getReadingOrder();
+        const index = readingOrder.indexOf(filePath);
+        if (index === -1 || index === 1) return;
+
+        dispatch(appActions.setFilePath(readingOrder[index - 1]));
+        dispatch(appActions.setHash(""));
+    };
 
     return (
         <header>
             <input type="file" accept=".epub" onChange={handleFileChange}></input>
+            <div className="page-buttons">
+                <button onClick={handlePrevPage}>上一页</button>
+                <button onClick={handleNextPage}>下一页</button>
+            </div>
         </header>
     );
 }

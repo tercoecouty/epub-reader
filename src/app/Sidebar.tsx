@@ -16,22 +16,6 @@ export default function Sidebar() {
     const hash = useSelector(selectHash);
     const [expands, setExpands] = useState({});
 
-    useEffect(() => {
-        if (!epub) return;
-
-        const _setExpands = (bookTable: IBookTableItem[]) => {
-            for (const item of bookTable) {
-                if (item.children) {
-                    expands[item.path] = false;
-                    _setExpands(item.children);
-                }
-            }
-        };
-
-        _setExpands(epub.getBookTable());
-        setExpands({ ...expands });
-    }, [epub]);
-
     const handleClickIcon = (e) => {
         const path = e.target.closest(".book-table-item").dataset.path;
         expands[path] = !expands[path];
@@ -100,5 +84,39 @@ export default function Sidebar() {
         return renderedBookTable;
     };
 
-    return <aside className="book-table">{epub ? renderBookTable(epub.getBookTable()) : null}</aside>;
+    const _setExpands = (bookTable: IBookTableItem[], expand) => {
+        for (const item of bookTable) {
+            if (item.children) {
+                expands[item.path] = expand;
+                _setExpands(item.children, expand);
+            }
+        }
+    };
+
+    const fold = () => {
+        _setExpands(epub.getBookTable(), false);
+        setExpands({ ...expands });
+    };
+
+    const unfold = () => {
+        _setExpands(epub.getBookTable(), true);
+        setExpands({ ...expands });
+    };
+
+    useEffect(() => {
+        if (!epub) return;
+
+        _setExpands(epub.getBookTable(), false);
+        setExpands({ ...expands });
+    }, [epub]);
+
+    return (
+        <aside className="book-table">
+            <div className="sidebar-buttons">
+                <button onClick={unfold}>展开</button>
+                <button onClick={fold}>折叠</button>
+            </div>
+            {epub ? renderBookTable(epub.getBookTable()) : null}
+        </aside>
+    );
 }
