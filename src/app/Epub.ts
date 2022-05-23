@@ -166,8 +166,8 @@ export default class Epub {
         else if (path.endsWith(".png")) type = "image/png";
         else if (path.endsWith(".jpg") || path.endsWith(".jpeg")) type = "image/jpeg";
 
-        const blob = new Blob([await file.async("blob")], { type });
-        const url = URL.createObjectURL(blob);
+        const blob = await file.async("blob");
+        const url = URL.createObjectURL(new Blob([blob], { type }));
         this.blobFileUrlCache.set(path, url);
 
         return url;
