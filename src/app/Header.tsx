@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import "./Header.less";
 import Epub from "./Epub";
@@ -9,10 +10,7 @@ export default function Header() {
     const epub = useSelector(selectEpub);
     const filePath = useSelector(selectFilePath);
 
-    const handleFileChange = async (e) => {
-        if (epub) epub.clearCache();
-
-        const file = e.target.files[0] as File;
+    const loadFile = async (file: File) => {
         const _epub = await new Epub().load(file);
         const readingOrder = _epub.getReadingOrder();
         dispatch(appActions.setEpub(_epub));
@@ -26,6 +24,13 @@ export default function Header() {
         } else {
             document.getElementById("text-html").classList.remove("en");
         }
+    };
+
+    const handleFileChange = async (e) => {
+        if (epub) epub.clearCache();
+
+        const file = e.target.files[0] as File;
+        await loadFile(file);
     };
 
     const nextPage = () => {
@@ -52,6 +57,19 @@ export default function Header() {
         dispatch(appActions.setFilePath(readingOrder[index - 1]));
         dispatch(appActions.setHash(""));
     };
+
+    useEffect(() => {
+        document.body.ondragover = (e) => {
+            e.preventDefault();
+        };
+        document.body.ondrop = (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0] as File;
+            if (!file) return;
+            if (!file.name.endsWith(".epub")) return;
+            loadFile(file);
+        };
+    }, []);
 
     return (
         <header>

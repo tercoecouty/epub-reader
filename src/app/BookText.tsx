@@ -121,9 +121,7 @@ export default function BookText() {
         <React.Fragment>
             <div className="text" id="text">
                 <div id="text-html" className="text-html" onClick={handleTextClick}></div>
-                <div className="refer-html" id="refer-html"></div>
             </div>
-            <pre className="refer-text" id="refer-text"></pre>
         </React.Fragment>
     );
 }
