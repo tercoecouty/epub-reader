@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import "./Header.less";
 import Epub from "./Epub";
@@ -29,7 +28,7 @@ export default function Header() {
         }
     };
 
-    const handleNextPage = () => {
+    const nextPage = () => {
         const readingOrder = epub.getReadingOrder();
 
         if (filePath) {
@@ -43,7 +42,7 @@ export default function Header() {
         }
     };
 
-    const handlePrevPage = () => {
+    const prevPage = () => {
         if (!filePath) return;
 
         const readingOrder = epub.getReadingOrder();
@@ -58,8 +57,8 @@ export default function Header() {
         <header>
             <input type="file" accept=".epub" onChange={handleFileChange}></input>
             <div className="page-buttons">
-                <button onClick={handlePrevPage}>上一页</button>
-                <button onClick={handleNextPage}>下一页</button>
+                <button onClick={prevPage}>上一页</button>
+                <button onClick={nextPage}>下一页</button>
             </div>
         </header>
     );
