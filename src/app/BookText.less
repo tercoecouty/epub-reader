@@ -1,17 +1,9 @@
 .text {
     padding: 24px 20%;
     margin-left: 18rem;
-    text-align: justify;
     margin-top: 64px;
     min-height: calc(100vh - 64px);
-
-    a {
-        text-decoration: none;
-    }
-
-    img {
-        max-width: 100%;
-    }
+    text-align: justify;
 }
 
 @media (max-width: 1750px) {
@@ -27,12 +19,13 @@
 }
 
 #text > .text-html {
-    * {
+    > * {
         font-family: "Times New Roman", Arial;
         font-size: 16px;
+        line-height: 1.5;
     }
 
-    &.en * {
+    &.en > * {
         font-family: Georgia, Arial;
     }
 
@@ -65,5 +58,13 @@
         font-size: 1rem;
         padding: 12px 0;
         margin: 0;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    img {
+        max-width: 100%;
     }
 }
