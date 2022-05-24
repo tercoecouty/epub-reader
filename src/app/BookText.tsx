@@ -77,13 +77,14 @@ export default function BookText() {
         }
 
         // text
-        // 无法处理希腊字母和数学符号
+        // u0021-\u007e ascii 打印字符
+        // \u0370-\u03ff 希腊字母
         for (const dom_p of htmlDOM.querySelectorAll("p")) {
             for (const node of dom_p.childNodes) {
                 if (node.nodeType !== 3) continue;
                 let text = node.textContent;
-                text = text.replaceAll(/([\u0021-\u007e])([\u4e00-\u9fa5])/g, "$1 $2");
-                text = text.replaceAll(/([\u4e00-\u9fa5])([\u0021-\u007e])/g, "$1 $2");
+                text = text.replaceAll(/([\u0021-\u007e\u0370-\u03ff])([\u4e00-\u9fa5])/g, "$1 $2");
+                text = text.replaceAll(/([\u4e00-\u9fa5])([\u0021-\u007e\u0370-\u03ff])/g, "$1 $2");
                 node.textContent = text;
             }
         }
