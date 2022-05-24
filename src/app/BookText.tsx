@@ -21,8 +21,6 @@ export default function BookText() {
         return pathList.join("/");
     };
 
-    const getNotes = (referDOM: Document) => {};
-
     const setBookText = async (filePath: string) => {
         const parser = new DOMParser();
         const htmlDOM = parser.parseFromString(await epub.getTextFile(filePath), "text/html");
@@ -64,9 +62,6 @@ export default function BookText() {
                 node.textContent = text;
             }
         }
-
-        // notes
-        const notes = getNotes(htmlDOM);
 
         document.getElementById("text-html").replaceChildren(...htmlDOM.body.children);
 
