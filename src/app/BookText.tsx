@@ -51,8 +51,8 @@ export default function BookText() {
         }
 
         // text
-        for (const dom_p of htmlDOM.querySelectorAll("p")) {
-            for (const node of dom_p.childNodes) {
+        for (const dom of htmlDOM.querySelectorAll("body > *")) {
+            for (const node of dom.childNodes) {
                 if (node.nodeType !== 3) continue;
                 let text = node.textContent;
                 text = text.replaceAll(/([\u0021-\u007e])([\u4e00-\u9fa5])/g, "$1 $2");
