@@ -98,11 +98,6 @@ export default function Sidebar() {
         setExpands({ ...expands });
     };
 
-    const unfold = () => {
-        _setExpands(epub.getBookTable(), true);
-        setExpands({ ...expands });
-    };
-
     useEffect(() => {
         if (!epub) return;
 
@@ -113,7 +108,6 @@ export default function Sidebar() {
     return (
         <aside className="book-table">
             <div className="sidebar-buttons">
-                <button onClick={unfold}>展开</button>
                 <button onClick={fold}>折叠</button>
             </div>
             {epub ? renderBookTable(epub.getBookTable()) : null}
