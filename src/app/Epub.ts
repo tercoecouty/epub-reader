@@ -62,7 +62,8 @@ export default class Epub {
         }
 
         for (const item of opfDOM.querySelectorAll("spine > itemref")) {
-            this.readingOrder.push(this.manifest.get(item.getAttribute("idref")));
+            const path = this.manifest.get(item.getAttribute("idref"));
+            this.readingOrder.push(encodeURIComponent(path));
         }
 
         const ncxDOM = this.parser.parseFromString(await this.getTextFile(ncxPath), "text/xml");
@@ -146,7 +147,7 @@ export default class Epub {
     async getTextFile(path: string) {
         if (this.textFileCache.has(path)) return this.textFileCache.get(path);
 
-        const file = this.zip.file(this.pathPrefix + path);
+        const file = this.zip.file(this.pathPrefix + decodeURIComponent(path));
         if (!file) return "";
 
         const text = await file.async("text");
@@ -158,7 +159,7 @@ export default class Epub {
     async getBlobFileUrl(path: string) {
         if (this.blobFileUrlCache.has(path)) return this.blobFileUrlCache.get(path);
 
-        const file = this.zip.file(this.pathPrefix + path);
+        const file = this.zip.file(this.pathPrefix + decodeURIComponent(path));
         if (!file) return "";
 
         let type = "";
