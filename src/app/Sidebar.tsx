@@ -104,6 +104,35 @@ export default function Sidebar() {
         setExpands({ ...expands });
     }, [epub]);
 
+    useEffect(() => {
+        if (!epub) return;
+
+        const parentPaths = [];
+        const searchFilePath = (bookTable: IBookTableItem[]) => {
+            for (const item of bookTable) {
+                if (item.path === filePath) return true;
+
+                if (item.children) {
+                    const result = searchFilePath(item.children);
+                    if (result) {
+                        parentPaths.push(item.path);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        };
+
+        searchFilePath(epub.getBookTable());
+
+        // 自动折叠目录
+        // for (const path of Object.keys(expands)) expands[path] = false;
+
+        for (const path of parentPaths) expands[path] = true;
+        setExpands({ ...expands });
+    }, [filePath]);
+
     return (
         <aside className="book-table">
             <div className="sidebar-buttons">
