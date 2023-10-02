@@ -93,7 +93,7 @@ export default function Sidebar() {
     };
 
     const fold = () => {
-        _setExpands(epub.getBookTable(), false);
+        for (const path of Object.keys(expands)) expands[path] = false;
         setExpands({ ...expands });
     };
 
