@@ -44,14 +44,13 @@ export default function Sidebar() {
         }
     };
 
-    // hash改变时无法处理高亮
     const renderBookTable = (bookTable: IBookTableItem[]) => {
         const renderedBookTable = [];
         let keyIndex = 0;
         for (const item of bookTable) {
             let titleClassName = "book-table-item-title";
             let path = filePath;
-            if (hash) path += "#" + hash;
+            // if (hash) path += "#" + hash;
             if (item.path === path) titleClassName += " currentPath";
 
             if (item.children) {
