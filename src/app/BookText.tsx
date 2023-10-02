@@ -32,7 +32,7 @@ export default function BookText() {
             const href = dom_link.getAttribute("href");
             const linkPath = resolvePath(filePath, href);
             let cssText = await epub.getTextFile(linkPath);
-            cssText = cssText.replaceAll(/(@font-face|body|div).?{.+?}/gs, "");
+            cssText = cssText.replaceAll(/url\(.+?\)/g, "none"); // 移除CSS中的url()
             const dom_style = document.createElement("style");
             dom_style.className = "epub-link-style";
             dom_style.textContent = cssText;
