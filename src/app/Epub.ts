@@ -63,7 +63,7 @@ export default class Epub {
 
         for (const item of opfDOM.querySelectorAll("spine > itemref")) {
             const path = this.manifest.get(item.getAttribute("idref"));
-            this.readingOrder.push(encodeURIComponent(path));
+            this.readingOrder.push(path);
         }
 
         const ncxDOM = this.parser.parseFromString(await this.getTextFile(ncxPath), "text/xml");
