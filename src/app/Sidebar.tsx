@@ -15,6 +15,7 @@ export default function Sidebar() {
     const filePath = useSelector(selectFilePath);
     const hash = useSelector(selectHash);
     const [expands, setExpands] = useState({});
+    const [autoScroll, setAutoScroll] = useState(false);
 
     const handleClickIcon = (e) => {
         const path = e.target.closest(".book-table-item").dataset.path;
@@ -44,14 +45,18 @@ export default function Sidebar() {
         }
     };
 
+    let currentPathFlag = false;
     const renderBookTable = (bookTable: IBookTableItem[]) => {
         const renderedBookTable = [];
         let keyIndex = 0;
+        let titleClassName = "";
         for (const item of bookTable) {
-            let titleClassName = "book-table-item-title";
-            let path = filePath;
-            // if (hash) path += "#" + hash;
-            if (item.path === path) titleClassName += " currentPath";
+            if (!currentPathFlag && item.path.includes(filePath)) {
+                titleClassName = "book-table-item-title currentPath";
+                currentPathFlag = true;
+            } else {
+                titleClassName = "book-table-item-title";
+            }
 
             if (item.children) {
                 renderedBookTable.push(
@@ -110,7 +115,7 @@ export default function Sidebar() {
         const parentPaths = [];
         const searchFilePath = (bookTable: IBookTableItem[]) => {
             for (const item of bookTable) {
-                if (item.path === filePath) return true;
+                if (item.path.includes(filePath)) return true;
 
                 if (item.children) {
                     const result = searchFilePath(item.children);
@@ -131,7 +136,28 @@ export default function Sidebar() {
 
         for (const path of parentPaths) expands[path] = true;
         setExpands({ ...expands });
+        setAutoScroll(true);
     }, [filePath]);
+
+    useEffect(() => {
+        if (!autoScroll) return;
+
+        function isInViewport(element) {
+            const rect = element.getBoundingClientRect();
+            return (
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+            );
+        }
+
+        const ele = document.querySelector(".currentPath");
+        if (ele && !isInViewport(ele)) {
+            document.querySelector(".currentPath").scrollIntoView();
+        }
+        setAutoScroll(false);
+    }, [autoScroll]);
 
     return (
         <aside className="book-table">
