@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import * as ZipJS from "@zip.js/zip.js";
 
 interface IMetaData {
     title: string;
@@ -18,6 +19,8 @@ export interface IBookTableItem {
 export default class Epub {
     private pathPrefix: string = "";
     private zip: JSZip = null;
+    private zip2: ZipJS.ZipReader<unknown> = null;
+    private entries: ZipJS.Entry[] = [];
     private parser = new DOMParser();
     private metaData: IMetaData;
     private manifest: Map<string, string> = new Map(); // id -> path
@@ -30,6 +33,8 @@ export default class Epub {
 
     async load(data: File | Blob) {
         this.zip = await JSZip.loadAsync(data);
+        this.zip2 = new ZipJS.ZipReader(new ZipJS.BlobReader(data));
+        this.entries = await this.zip2.getEntries();
 
         const container = this.parser.parseFromString(await this.getTextFile("META-INF/container.xml"), "text/xml");
         const splits = container.querySelector("rootfile")?.getAttribute("full-path").split("/");
@@ -150,8 +155,15 @@ export default class Epub {
         const file = this.zip.file(this.pathPrefix + decodeURIComponent(path));
         if (!file) return "";
 
+        console.time("text");
         const text = await file.async("text");
         this.textFileCache.set(path, text);
+        console.timeEnd("text");
+
+        console.time("text2");
+        const entry = this.entries.find((e) => e.filename === this.pathPrefix + decodeURIComponent(path));
+        const text2 = await entry.getData(new ZipJS.BlobWriter());
+        console.timeEnd("text2");
 
         return text;
     }
