@@ -22,6 +22,7 @@ export default function BookText() {
     };
 
     const setBookText = async (filePath: string) => {
+        console.time(`loadPage ${filePath}`);
         const parser = new DOMParser();
         const htmlDOM = parser.parseFromString(await epub.getTextFile(filePath), "text/html");
 
@@ -60,6 +61,8 @@ export default function BookText() {
                 node.textContent = text;
             }
         }
+
+        console.timeEnd(`loadPage ${filePath}`);
 
         document.getElementById("text-html").replaceChildren(...htmlDOM.body.children);
 

@@ -1,4 +1,4 @@
-import JSZip from "jszip";
+// import JSZip from "jszip";
 import * as ZipJS from "@zip.js/zip.js";
 
 interface IMetaData {
@@ -18,8 +18,8 @@ export interface IBookTableItem {
 
 export default class Epub {
     private pathPrefix: string = "";
-    private zip: JSZip = null;
-    private zip2: ZipJS.ZipReader<unknown> = null;
+    // private zip: JSZip = null;
+    private zipJS: ZipJS.ZipReader<unknown> = null;
     private entries: ZipJS.Entry[] = [];
     private parser = new DOMParser();
     private metaData: IMetaData;
@@ -32,9 +32,9 @@ export default class Epub {
     constructor() {}
 
     async load(data: File | Blob) {
-        this.zip = await JSZip.loadAsync(data);
-        this.zip2 = new ZipJS.ZipReader(new ZipJS.BlobReader(data));
-        this.entries = await this.zip2.getEntries();
+        // this.zip = await JSZip.loadAsync(data);
+        this.zipJS = new ZipJS.ZipReader(new ZipJS.BlobReader(data));
+        this.entries = await this.zipJS.getEntries();
 
         const container = this.parser.parseFromString(await this.getTextFile("META-INF/container.xml"), "text/xml");
         const splits = container.querySelector("rootfile")?.getAttribute("full-path").split("/");
@@ -152,18 +152,19 @@ export default class Epub {
     async getTextFile(path: string) {
         if (this.textFileCache.has(path)) return this.textFileCache.get(path);
 
-        const file = this.zip.file(this.pathPrefix + decodeURIComponent(path));
-        if (!file) return "";
+        // use jszip
+        // const file = this.zip.file(this.pathPrefix + decodeURIComponent(path));
+        // if (!file) return "";
 
-        console.time("text");
-        const text = await file.async("text");
-        this.textFileCache.set(path, text);
-        console.timeEnd("text");
+        // const text = await file.async("text");
+        // this.textFileCache.set(path, text);
 
-        console.time("text2");
+        // use zip.js
         const entry = this.entries.find((e) => e.filename === this.pathPrefix + decodeURIComponent(path));
-        const text2 = await entry.getData(new ZipJS.BlobWriter());
-        console.timeEnd("text2");
+        if (!entry) return "";
+
+        const blob = await entry.getData(new ZipJS.BlobWriter());
+        const text = await blob.text();
 
         return text;
     }
@@ -171,15 +172,21 @@ export default class Epub {
     async getBlobFileUrl(path: string) {
         if (this.blobFileUrlCache.has(path)) return this.blobFileUrlCache.get(path);
 
-        const file = this.zip.file(this.pathPrefix + decodeURIComponent(path));
-        if (!file) return "";
+        // use jszip
+        // const file = this.zip.file(this.pathPrefix + decodeURIComponent(path));
+        // if (!file) return "";
+        // const blob = await file.async("blob");
+
+        // use zip.js
+        const entry = this.entries.find((e) => e.filename === this.pathPrefix + decodeURIComponent(path));
+        if (!entry) return "";
+        const blob = await entry.getData(new ZipJS.BlobWriter());
 
         let type = "";
         if (path.endsWith(".svg")) type = "image/svg+xml";
         else if (path.endsWith(".png")) type = "image/png";
         else if (path.endsWith(".jpg") || path.endsWith(".jpeg")) type = "image/jpeg";
 
-        const blob = await file.async("blob");
         const url = URL.createObjectURL(new Blob([blob], { type }));
         this.blobFileUrlCache.set(path, url);
 
