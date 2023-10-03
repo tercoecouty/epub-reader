@@ -13,6 +13,7 @@ const store = configureStore({
                 ignoredActions: ["app/setEpub"],
             },
         }),
+    devTools: import.meta.env.DEV,
 });
 
 export default store;
