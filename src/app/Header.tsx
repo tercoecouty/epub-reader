@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import "./Header.less";
-import Epub from "./Epub";
+// import Epub from "./Epub";
+import Epub2 from "./Epub2";
 
 import { selectEpub, selectFilePath, appActions } from "../slice/appSlice";
 
@@ -11,19 +12,19 @@ export default function Header() {
     const filePath = useSelector(selectFilePath);
 
     const loadFile = async (file: File) => {
-        const _epub = await new Epub().load(file);
-        const readingOrder = _epub.getReadingOrder();
-        dispatch(appActions.setEpub(_epub));
-        dispatch(appActions.setFilePath(readingOrder[1]));
-        dispatch(appActions.setHash(""));
-
-        document.getElementById("text-html").replaceChildren();
-        document.title = _epub.getMetaData().title;
-        if (_epub.getMetaData().language.includes("en")) {
-            document.getElementById("text-html").classList.add("en");
-        } else {
-            document.getElementById("text-html").classList.remove("en");
-        }
+        await new Epub2().load(file);
+        // const _epub = await new Epub().load(file);
+        // const readingOrder = _epub.getReadingOrder();
+        // dispatch(appActions.setEpub(_epub));
+        // dispatch(appActions.setFilePath(readingOrder[1]));
+        // dispatch(appActions.setHash(""));
+        // document.getElementById("text-html").replaceChildren();
+        // document.title = _epub.getMetaData().title;
+        // if (_epub.getMetaData().language.includes("en")) {
+        //     document.getElementById("text-html").classList.add("en");
+        // } else {
+        //     document.getElementById("text-html").classList.remove("en");
+        // }
     };
 
     const handleFileChange = async (e) => {
