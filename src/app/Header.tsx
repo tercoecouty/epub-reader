@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import "./Header.less";
 import Epub from "./Epub";
-import Epub2 from "./Epub2";
 
 import { selectEpub, selectFilePath, appActions } from "../slice/appSlice";
 
@@ -12,7 +11,6 @@ export default function Header() {
     const filePath = useSelector(selectFilePath);
 
     const loadFile = async (file: File) => {
-        // await new Epub2().load(file);
         const _epub = await new Epub().load(file);
         const readingOrder = _epub.getReadingOrder();
         dispatch(appActions.setEpub(_epub));
