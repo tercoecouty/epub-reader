@@ -34,6 +34,8 @@ export default function Header() {
     };
 
     const nextPage = () => {
+        if (!filePath) return;
+
         const readingOrder = epub.getReadingOrder();
 
         if (filePath) {
@@ -70,6 +72,13 @@ export default function Header() {
             loadFile(file);
         };
     }, []);
+
+    useEffect(() => {
+        document.onkeydown = (e) => {
+            if (e.key === "ArrowLeft") prevPage();
+            if (e.key === "ArrowRight") nextPage();
+        };
+    }, [filePath, epub]);
 
     return (
         <header>
