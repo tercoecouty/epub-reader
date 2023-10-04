@@ -148,7 +148,7 @@ export default class Epub {
     async getTextFile(path: string) {
         if (this.textCache.has(path)) return this.textCache.get(path);
 
-        const array = this.unzip(this.pathPrefix + decodeURIComponent(path));
+        const array = this.unzip(path);
         if (array.length === 0) return "";
 
         const text = new TextDecoder().decode(array);
@@ -157,10 +157,10 @@ export default class Epub {
         return text;
     }
 
-    async getBlobFileUrl(path: string) {
+    async getImgUrl(path: string) {
         if (this.imgUrlCache.has(path)) return this.imgUrlCache.get(path);
 
-        const array = this.unzip(this.pathPrefix + decodeURIComponent(path));
+        const array = this.unzip(path);
         if (array.length === 0) return "";
 
         let type = "";
@@ -174,13 +174,15 @@ export default class Epub {
         return url;
     }
 
-    private unzip(filename): Uint8Array {
+    private unzip(path): Uint8Array {
+        const filename = this.pathPrefix + decodeURIComponent(path);
         const data = unzipSync(this.fileDate, {
             filter(file) {
                 return file.name === filename;
             },
         });
 
+        console.log(`unzip: ${path}`);
         return Object.values(data)[0] || new Uint8Array();
     }
 }
