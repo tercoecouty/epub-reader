@@ -1,5 +1,4 @@
-// import JSZip from "jszip";
-import * as ZipJS from "@zip.js/zip.js";
+import { unzipSync } from "fflate";
 
 interface IMetaData {
     title: string;
@@ -18,23 +17,19 @@ export interface IBookTableItem {
 
 export default class Epub {
     private pathPrefix: string = "";
-    // private zip: JSZip = null;
-    private zipJS: ZipJS.ZipReader<unknown> = null;
-    private entries: ZipJS.Entry[] = [];
+    private fileDate: Uint8Array = null;
     private parser = new DOMParser();
     private metaData: IMetaData;
-    private manifest: Map<string, string> = new Map(); // id -> path
     private readingOrder: string[] = []; // list of paths
     private bookTable: IBookTableItem[] = [];
-    private textFileCache: Map<string, string> = new Map(); // path -> fileText
-    private blobFileUrlCache: Map<string, string> = new Map(); // path -> object url
+    private textCache: Map<string, string> = new Map(); // path -> fileText
+    private imgUrlCache: Map<string, string> = new Map(); // path -> object url
 
     constructor() {}
 
-    async load(data: File | Blob) {
-        // this.zip = await JSZip.loadAsync(data);
-        this.zipJS = new ZipJS.ZipReader(new ZipJS.BlobReader(data));
-        this.entries = await this.zipJS.getEntries();
+    async load(file: File) {
+        const buffer = await file.arrayBuffer();
+        this.fileDate = new Uint8Array(buffer);
 
         const container = this.parser.parseFromString(await this.getTextFile("META-INF/container.xml"), "text/xml");
         const splits = container.querySelector("rootfile")?.getAttribute("full-path").split("/");
@@ -60,14 +55,15 @@ export default class Epub {
         }
 
         let ncxPath = "toc.ncx";
+        const manifest: Map<string, string> = new Map();
         for (const item of opfDOM.querySelectorAll("manifest > item")) {
             const href = item.getAttribute("href");
-            this.manifest.set(item.id, href);
+            manifest.set(item.id, href);
             if (href.endsWith(".ncx")) ncxPath = href;
         }
 
         for (const item of opfDOM.querySelectorAll("spine > itemref")) {
-            const path = this.manifest.get(item.getAttribute("idref"));
+            const path = manifest.get(item.getAttribute("idref"));
             this.readingOrder.push(path);
         }
 
@@ -80,7 +76,7 @@ export default class Epub {
     }
 
     clearCache() {
-        for (const url of this.blobFileUrlCache.values()) {
+        for (const url of this.imgUrlCache.values()) {
             URL.revokeObjectURL(url);
         }
     }
@@ -150,46 +146,41 @@ export default class Epub {
     }
 
     async getTextFile(path: string) {
-        if (this.textFileCache.has(path)) return this.textFileCache.get(path);
+        if (this.textCache.has(path)) return this.textCache.get(path);
 
-        // use jszip
-        // const file = this.zip.file(this.pathPrefix + decodeURIComponent(path));
-        // if (!file) return "";
+        const array = this.unzip(this.pathPrefix + decodeURIComponent(path));
+        if (array.length === 0) return "";
 
-        // const text = await file.async("text");
-        // this.textFileCache.set(path, text);
+        const text = new TextDecoder().decode(array);
 
-        // use zip.js
-        const entry = this.entries.find((e) => e.filename === this.pathPrefix + decodeURIComponent(path));
-        if (!entry) return "";
-
-        const blob = await entry.getData(new ZipJS.BlobWriter());
-        const text = await blob.text();
-
+        this.textCache.set(path, text);
         return text;
     }
 
     async getBlobFileUrl(path: string) {
-        if (this.blobFileUrlCache.has(path)) return this.blobFileUrlCache.get(path);
+        if (this.imgUrlCache.has(path)) return this.imgUrlCache.get(path);
 
-        // use jszip
-        // const file = this.zip.file(this.pathPrefix + decodeURIComponent(path));
-        // if (!file) return "";
-        // const blob = await file.async("blob");
-
-        // use zip.js
-        const entry = this.entries.find((e) => e.filename === this.pathPrefix + decodeURIComponent(path));
-        if (!entry) return "";
-        const blob = await entry.getData(new ZipJS.BlobWriter());
+        const array = this.unzip(this.pathPrefix + decodeURIComponent(path));
+        if (array.length === 0) return "";
 
         let type = "";
         if (path.endsWith(".svg")) type = "image/svg+xml";
         else if (path.endsWith(".png")) type = "image/png";
         else if (path.endsWith(".jpg") || path.endsWith(".jpeg")) type = "image/jpeg";
 
-        const url = URL.createObjectURL(new Blob([blob], { type }));
-        this.blobFileUrlCache.set(path, url);
+        const url = URL.createObjectURL(new Blob([array], { type }));
+        this.imgUrlCache.set(path, url);
 
         return url;
+    }
+
+    private unzip(filename): Uint8Array {
+        const data = unzipSync(this.fileDate, {
+            filter(file) {
+                return file.name === filename;
+            },
+        });
+
+        return Object.values(data)[0] || new Uint8Array();
     }
 }
